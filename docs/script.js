@@ -30,18 +30,40 @@ SCENE "Morph":
     TRANSFORM square TO circle
         FOR 2;`
   },
-  voice: {
-    file: "voiceover.manim",
-    label: "VOICE-OVER",
-    caption: "audio / gTTS + scene timeline",
+  group: {
+    file: "all-do.manim",
+    label: "PARALLEL GROUP",
+    caption: "concurrent animations / lag_ratio = 0",
     source: `OBJECTS:
-    dot: { object: { type: "dot",
+    sun: { object: { type: "dot",
+        radius: 0.3, color: GOLD } }
+    moon: { object: { type: "dot",
+        radius: 0.3, color: CYAN } }
+    star: { object: { type: "dot",
+        radius: 0.3, color: PURPLE } }
+
+SCENE "Together":
+    ALL DO:
+        MOVE sun TO (-3, 1) FOR 2;
+        MOVE moon TO (0, 1) FOR 2;
+        MOVE star TO (3, 1) FOR 2;`
+  },
+  voice: {
+    file: "speak-all.manim",
+    label: "VOICE + PARALLEL",
+    caption: "voiceover + two concurrent animations",
+    source: `OBJECTS:
+    left: { object: { type: "dot",
         radius: 0.25, color: CYAN } }
+    right: { object: { type: "dot",
+        radius: 0.25, color: GOLD } }
 
 SCENE "Narrated":
-    PLACE dot AT (-3, 0);
-    SPEAK "Let's animate this" DO:
-        MOVE dot TO (3, 0) FOR 2;`
+    PLACE left AT (-3, 0);
+    PLACE right AT (3, 0);
+    SPEAK "Let's animate this" ALL DO:
+        MOVE left TO (-1, 0) FOR 2;
+        MOVE right TO (1, 0) FOR 2;`
   }
 };
 
@@ -61,7 +83,7 @@ function escapeHTML(value) {
 function colorize(value) {
   return escapeHTML(value)
     .replace(/("[^"]*")/g, '<span class="syntax-string">$1</span>')
-    .replace(/\b(OBJECTS|SCENE|PLACE|AT|FADE_IN|FADE_OUT|FOR|WAIT|MOVE|TOWARD|CIRCULATE|AROUND|RADIUS|OMEGA|SPEAK|DO|ROTATE|BY|TRANSFORM|TO|RATE|LINEAR)\b/g, '<span class="syntax-keyword">$1</span>')
+    .replace(/\b(OBJECTS|SCENE|PLACE|AT|FADE_IN|FADE_OUT|FOR|WAIT|MOVE|TOWARD|CIRCULATE|AROUND|RADIUS|OMEGA|SPEAK|DO|ALL|ROTATE|BY|TRANSFORM|TO|RATE|LINEAR)\b/g, '<span class="syntax-keyword">$1</span>')
     .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="syntax-number">$1</span>');
 }
 
@@ -95,7 +117,7 @@ runButton.addEventListener("click", () => {
   runButton.innerHTML = "<span>↻</span> RE-RUN";
   runTimer = window.setTimeout(() => {
     document.querySelector("#run-status").textContent = "COMPLETE · 0 ERRORS";
-  }, 2600);
+  }, activeSample === "group" ? 2200 : 2600);
 });
 
 document.querySelector("#copy-code").addEventListener("click", async (event) => {

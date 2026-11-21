@@ -1,0 +1,232 @@
+# A narrated walkthrough of gradient boosting for regression
+# Toy task: predict house prices (in thousands) from house size.
+
+OBJECTS:
+    title: { object: { type: "text", text: "GRADIENT BOOSTING", font_size: 58, color: TEAL_A } }
+    subtitle: { object: { type: "text", text: "Learning from the mistakes", font_size: 32, color: WHITE } }
+    chapter: { object: { type: "text", text: "A REGRESSION EXAMPLE", font_size: 24, color: YELLOW } }
+
+    data_heading: { object: { type: "text", text: "TRAINING EXAMPLES  /  SIZE -> PRICE ($K)", font_size: 27, color: TEAL_A } }
+    data_row_1: { object: { type: "text", text: "1,000 sq ft                 100", font_size: 30, color: WHITE } }
+    data_row_2: { object: { type: "text", text: "1,500 sq ft                 150", font_size: 30, color: WHITE } }
+    data_row_3: { object: { type: "text", text: "2,000 sq ft                 200", font_size: 30, color: WHITE } }
+    data_row_4: { object: { type: "text", text: "2,500 sq ft                 250", font_size: 30, color: WHITE } }
+    data_note: { object: { type: "text", text: "Four examples. One feature. A deliberately tiny dataset.", font_size: 23, color: GREY_B } }
+
+    mean_heading: { object: { type: "text", text: "START WITH A SIMPLE GUESS", font_size: 30, color: YELLOW } }
+    mean_formula: { object: { type: "text", text: "(100 + 150 + 200 + 250) / 4 = 175", font_size: 38, color: WHITE } }
+    mean_note: { object: { type: "text", text: "Predict $175K for every house.", font_size: 29, color: GREY_B } }
+    residual_heading: { object: { type: "text", text: "RESIDUAL = ACTUAL - PREDICTION", font_size: 28, color: TEAL_A } }
+    residual_row_1: { object: { type: "text", text: "Actual 100    -    Guess 175    =    -75", font_size: 27, color: RED_A } }
+    residual_row_2: { object: { type: "text", text: "Actual 150    -    Guess 175    =    -25", font_size: 27, color: RED_A } }
+    residual_row_3: { object: { type: "text", text: "Actual 200    -    Guess 175    =    +25", font_size: 27, color: GREEN_A } }
+    residual_row_4: { object: { type: "text", text: "Actual 250    -    Guess 175    =    +75", font_size: 27, color: GREEN_A } }
+
+    tree_one_heading: { object: { type: "text", text: "WEAK TREE 1  /  LEARN THE RESIDUALS", font_size: 28, color: TEAL_A } }
+    tree_one_split: { object: { type: "text", text: "House size <= 1,750 sq ft?", font_size: 34, color: WHITE } }
+    tree_one_left: { object: { type: "text", text: "YES  ->  average residual = -50", font_size: 29, color: BLUE_A } }
+    tree_one_right: { object: { type: "text", text: "NO   ->  average residual = +50", font_size: 29, color: ORANGE } }
+    learning_rate: { object: { type: "text", text: "Learning rate = 0.5  ->  use half of each correction", font_size: 26, color: YELLOW } }
+    update_one_heading: { object: { type: "text", text: "ADD THE SHRUNK TREE CORRECTION", font_size: 29, color: TEAL_A } }
+    update_one_small: { object: { type: "text", text: "Smaller homes:  175 + (0.5 x -50) = 150", font_size: 30, color: WHITE } }
+    update_one_large: { object: { type: "text", text: "Larger homes:    175 + (0.5 x +50) = 200", font_size: 30, color: WHITE } }
+    update_one_note: { object: { type: "text", text: "The model now predicts $150K or $200K, based on the split.", font_size: 24, color: GREY_B } }
+    residual_two_heading: { object: { type: "text", text: "NEW RESIDUALS  /  WHAT IS STILL WRONG?", font_size: 28, color: TEAL_A } }
+    residual_two_values: { object: { type: "text", text: "-50       0       0       +50", font_size: 40, color: YELLOW } }
+    residual_two_note: { object: { type: "text", text: "The first tree helped, but its broad split cannot fit every house.", font_size: 23, color: GREY_B } }
+
+    tree_two_heading: { object: { type: "text", text: "TREE 2  /  FIT THE LEFTOVER ERROR", font_size: 28, color: TEAL_A } }
+    tree_two_leaf_1: { object: { type: "text", text: "<= 1,250 sq ft: residual -50", font_size: 26, color: BLUE_A } }
+    tree_two_leaf_2: { object: { type: "text", text: "1,250-1,750 sq ft: residual 0", font_size: 26, color: BLUE_A } }
+    tree_two_leaf_3: { object: { type: "text", text: "1,750-2,250 sq ft: residual 0", font_size: 26, color: ORANGE } }
+    tree_two_leaf_4: { object: { type: "text", text: "> 2,250 sq ft: residual +50", font_size: 26, color: ORANGE } }
+    tree_two_note: { object: { type: "text", text: "A deeper tree can make more specific corrections.", font_size: 23, color: GREY_B } }
+    update_two_heading: { object: { type: "text", text: "THE ENSEMBLE AFTER TWO TREES", font_size: 29, color: TEAL_A } }
+    prediction_header: { object: { type: "text", text: "SIZE (SQ FT)       ACTUAL       PREDICTION", font_size: 23, color: GREY_B } }
+    prediction_row_1: { object: { type: "text", text: "1,000                   100                 125", font_size: 27, color: WHITE } }
+    prediction_row_2: { object: { type: "text", text: "1,500                   150                 150", font_size: 27, color: WHITE } }
+    prediction_row_3: { object: { type: "text", text: "2,000                   200                 200", font_size: 27, color: WHITE } }
+    prediction_row_4: { object: { type: "text", text: "2,500                   250                 225", font_size: 27, color: WHITE } }
+    prediction_note: { object: { type: "text", text: "Each training prediction is now closer to its actual price.", font_size: 23, color: GREEN_A } }
+
+    formula_heading: { object: { type: "text", text: "THE WHOLE IDEA", font_size: 34, color: YELLOW } }
+    formula_one: { object: { type: "text", text: "new prediction = old prediction + learning rate x tree correction", font_size: 27, color: WHITE } }
+    formula_two: { object: { type: "text", text: "model = initial guess + tree 1 + tree 2 + ... + tree N", font_size: 29, color: TEAL_A } }
+    takeaway_one: { object: { type: "text", text: "Trees are added one at a time; each new tree targets current errors.", font_size: 24, color: WHITE } }
+    takeaway_two: { object: { type: "text", text: "Small trees + a learning rate help make gradual corrections.", font_size: 24, color: WHITE } }
+    caveat: { object: { type: "text", text: "This toy example uses squared-error regression. Other losses use their gradients.", font_size: 21, color: GREY_B } }
+    end_card: { object: { type: "text", text: "BOOSTING = CORRECT, ADD, REPEAT", font_size: 42, color: YELLOW } }
+
+SCENE "GradientBoosting":
+    SPEAK "Gradient boosting builds a strong prediction by adding small models one after another. Let's see how that works with a tiny house-price example." ALL DO:
+        PLACE title AT (0, 2);
+        PLACE subtitle AT (0, 0.7);
+        PLACE chapter AT (0, -0.8);
+        FADE_IN title FOR 1;
+        FADE_IN subtitle FOR 1;
+        FADE_IN chapter FOR 1;
+
+    SPEAK "We have four training houses. We know each house's size and its sale price, measured in thousands of dollars." ALL DO:
+        FADE_OUT title FOR 0.5;
+        FADE_OUT subtitle FOR 0.5;
+        FADE_OUT chapter FOR 0.5;
+        PLACE data_heading AT (0, 2);
+        PLACE data_row_1 AT (0, 1);
+        PLACE data_row_2 AT (0, 0.3);
+        PLACE data_row_3 AT (0, -0.4);
+        PLACE data_row_4 AT (0, -1.1);
+        PLACE data_note AT (0, -2.2);
+        FADE_IN data_heading FOR 0.8;
+        FADE_IN data_row_1 FOR 0.8;
+        FADE_IN data_row_2 FOR 0.8;
+        FADE_IN data_row_3 FOR 0.8;
+        FADE_IN data_row_4 FOR 0.8;
+        FADE_IN data_note FOR 0.8;
+
+    SPEAK "Before building any trees, make one simple guess for every house: the average price. One hundred plus one hundred fifty plus two hundred plus two hundred fifty, divided by four, equals one hundred seventy-five thousand dollars." ALL DO:
+        FADE_OUT data_heading FOR 0.4;
+        FADE_OUT data_row_1 FOR 0.4;
+        FADE_OUT data_row_2 FOR 0.4;
+        FADE_OUT data_row_3 FOR 0.4;
+        FADE_OUT data_row_4 FOR 0.4;
+        FADE_OUT data_note FOR 0.4;
+        PLACE mean_heading AT (0, 1.7);
+        PLACE mean_formula AT (0, 0.4);
+        PLACE mean_note AT (0, -0.8);
+        FADE_IN mean_heading FOR 0.7;
+        FADE_IN mean_formula FOR 0.7;
+        FADE_IN mean_note FOR 0.7;
+
+    SPEAK "Now calculate residuals: actual price minus predicted price. Negative means our guess was too high. Positive means it was too low." ALL DO:
+        FADE_OUT mean_heading FOR 0.4;
+        FADE_OUT mean_formula FOR 0.4;
+        FADE_OUT mean_note FOR 0.4;
+        PLACE residual_heading AT (0, 2);
+        PLACE residual_row_1 AT (0, 1);
+        PLACE residual_row_2 AT (0, 0.25);
+        PLACE residual_row_3 AT (0, -0.5);
+        PLACE residual_row_4 AT (0, -1.25);
+        FADE_IN residual_heading FOR 0.7;
+        FADE_IN residual_row_1 FOR 0.7;
+        FADE_IN residual_row_2 FOR 0.7;
+        FADE_IN residual_row_3 FOR 0.7;
+        FADE_IN residual_row_4 FOR 0.7;
+
+    SPEAK "Tree one is deliberately simple. It asks whether the house is at most one thousand seven hundred fifty square feet. In each leaf, it averages the residuals of the houses that landed there." ALL DO:
+        FADE_OUT residual_heading FOR 0.4;
+        FADE_OUT residual_row_1 FOR 0.4;
+        FADE_OUT residual_row_2 FOR 0.4;
+        FADE_OUT residual_row_3 FOR 0.4;
+        FADE_OUT residual_row_4 FOR 0.4;
+        PLACE tree_one_heading AT (0, 2);
+        PLACE tree_one_split AT (0, 0.9);
+        PLACE tree_one_left AT (0, -0.1);
+        PLACE tree_one_right AT (0, -0.9);
+        PLACE learning_rate AT (0, -2);
+        FADE_IN tree_one_heading FOR 0.7;
+        FADE_IN tree_one_split FOR 0.7;
+        FADE_IN tree_one_left FOR 0.7;
+        FADE_IN tree_one_right FOR 0.7;
+        FADE_IN learning_rate FOR 0.7;
+
+    SPEAK "The first two residuals average to minus fifty. The last two average to plus fifty. With a learning rate of one half, the model adds only half of each leaf's correction. The small-house prediction becomes one hundred fifty. The large-house prediction becomes two hundred." ALL DO:
+        FADE_OUT tree_one_heading FOR 0.4;
+        FADE_OUT tree_one_split FOR 0.4;
+        FADE_OUT tree_one_left FOR 0.4;
+        FADE_OUT tree_one_right FOR 0.4;
+        FADE_OUT learning_rate FOR 0.4;
+        PLACE update_one_heading AT (0, 1.5);
+        PLACE update_one_small AT (0, 0.35);
+        PLACE update_one_large AT (0, -0.55);
+        PLACE update_one_note AT (0, -1.6);
+        FADE_IN update_one_heading FOR 0.7;
+        FADE_IN update_one_small FOR 0.7;
+        FADE_IN update_one_large FOR 0.7;
+        FADE_IN update_one_note FOR 0.7;
+
+    SPEAK "A second tree does not start over. It looks at what is still wrong after tree one. The new residuals are minus fifty, zero, zero, and plus fifty." ALL DO:
+        FADE_OUT update_one_heading FOR 0.4;
+        FADE_OUT update_one_small FOR 0.4;
+        FADE_OUT update_one_large FOR 0.4;
+        FADE_OUT update_one_note FOR 0.4;
+        PLACE residual_two_heading AT (0, 1.2);
+        PLACE residual_two_values AT (0, 0);
+        PLACE residual_two_note AT (0, -1.2);
+        FADE_IN residual_two_heading FOR 0.7;
+        FADE_IN residual_two_values FOR 0.7;
+        FADE_IN residual_two_note FOR 0.7;
+
+    SPEAK "Tree two makes three size splits, so it can form four leaves. Their residuals are minus fifty, zero, zero, and plus fifty. Applying half of each correction refines the predictions." ALL DO:
+        FADE_OUT residual_two_heading FOR 0.4;
+        FADE_OUT residual_two_values FOR 0.4;
+        FADE_OUT residual_two_note FOR 0.4;
+        PLACE tree_two_heading AT (0, 1.5);
+        PLACE tree_two_leaf_1 AT (0, 0.9);
+        PLACE tree_two_leaf_2 AT (0, 0.25);
+        PLACE tree_two_leaf_3 AT (0, -0.4);
+        PLACE tree_two_leaf_4 AT (0, -1.05);
+        PLACE tree_two_note AT (0, -1.9);
+        FADE_IN tree_two_heading FOR 0.7;
+        FADE_IN tree_two_leaf_1 FOR 0.7;
+        FADE_IN tree_two_leaf_2 FOR 0.7;
+        FADE_IN tree_two_leaf_3 FOR 0.7;
+        FADE_IN tree_two_leaf_4 FOR 0.7;
+        FADE_IN tree_two_note FOR 0.7;
+
+    SPEAK "After two trees, the predictions are one hundred twenty-five, one hundred fifty, two hundred, and two hundred twenty-five thousand dollars. They are closer to the four training prices, though a larger model could fit them more closely." ALL DO:
+        FADE_OUT tree_two_heading FOR 0.4;
+        FADE_OUT tree_two_leaf_1 FOR 0.4;
+        FADE_OUT tree_two_leaf_2 FOR 0.4;
+        FADE_OUT tree_two_leaf_3 FOR 0.4;
+        FADE_OUT tree_two_leaf_4 FOR 0.4;
+        FADE_OUT tree_two_note FOR 0.4;
+        PLACE update_two_heading AT (0, 2);
+        PLACE prediction_header AT (0, 1.1);
+        PLACE prediction_row_1 AT (0, 0.4);
+        PLACE prediction_row_2 AT (0, -0.25);
+        PLACE prediction_row_3 AT (0, -0.9);
+        PLACE prediction_row_4 AT (0, -1.55);
+        PLACE prediction_note AT (0, -2.4);
+        FADE_IN update_two_heading FOR 0.7;
+        FADE_IN prediction_header FOR 0.7;
+        FADE_IN prediction_row_1 FOR 0.7;
+        FADE_IN prediction_row_2 FOR 0.7;
+        FADE_IN prediction_row_3 FOR 0.7;
+        FADE_IN prediction_row_4 FOR 0.7;
+        FADE_IN prediction_note FOR 0.7;
+
+    SPEAK "That is the core loop. Start with a guess. Measure the errors. Fit a small tree to those errors. Add a scaled correction. Repeat. The final model is the initial guess plus the contributions of all the trees." ALL DO:
+        FADE_OUT update_two_heading FOR 0.4;
+        FADE_OUT prediction_header FOR 0.4;
+        FADE_OUT prediction_row_1 FOR 0.4;
+        FADE_OUT prediction_row_2 FOR 0.4;
+        FADE_OUT prediction_row_3 FOR 0.4;
+        FADE_OUT prediction_row_4 FOR 0.4;
+        FADE_OUT prediction_note FOR 0.4;
+        PLACE formula_heading AT (0, 2);
+        PLACE formula_one AT (0, 0.9);
+        PLACE formula_two AT (0, 0);
+        PLACE takeaway_one AT (0, -1);
+        PLACE takeaway_two AT (0, -1.7);
+        FADE_IN formula_heading FOR 0.7;
+        FADE_IN formula_one FOR 0.7;
+        FADE_IN formula_two FOR 0.7;
+        FADE_IN takeaway_one FOR 0.7;
+        FADE_IN takeaway_two FOR 0.7;
+
+    SPEAK "This example uses squared-error regression, where residuals point toward reducing prediction error. More generally, gradient boosting uses the gradient of a chosen loss. Small trees and a modest learning rate make gradual updates; the number and depth of trees control model complexity." ALL DO:
+        FADE_OUT formula_heading FOR 0.4;
+        FADE_OUT formula_one FOR 0.4;
+        FADE_OUT formula_two FOR 0.4;
+        FADE_OUT takeaway_one FOR 0.4;
+        FADE_OUT takeaway_two FOR 0.4;
+        PLACE caveat AT (0, 0.9);
+        PLACE end_card AT (0, -0.5);
+        FADE_IN caveat FOR 0.7;
+        FADE_IN end_card FOR 0.7;
+
+    SPEAK "Gradient boosting: correct, add, and repeat." ALL DO:
+        SCALE end_card BY 1.08 FOR 0.8;
+        FADE_OUT caveat FOR 0.8;
+
+    WAIT 1;

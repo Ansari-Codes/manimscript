@@ -111,7 +111,8 @@
             <div class="demo-tabs" role="tablist" aria-label="Select a ManimScript sample">
               <button class="demo-tab selected" type="button" role="tab" aria-selected="true" data-demo="orbit">orbit</button>
               <button class="demo-tab" type="button" role="tab" aria-selected="false" data-demo="transform">transform</button>
-              <button class="demo-tab" type="button" role="tab" aria-selected="false" data-demo="voice">voiceover</button>
+              <button class="demo-tab" type="button" role="tab" aria-selected="false" data-demo="group">all-do</button>
+              <button class="demo-tab" type="button" role="tab" aria-selected="false" data-demo="voice">speak-all</button>
             </div>
             <pre class="source-code"><code id="demo-code"></code></pre>
             <div class="editor-footer"><span><i class="tiny-status"></i> SOURCE READY</span><button id="copy-code" type="button">COPY SOURCE <b>⧉</b></button></div>
@@ -125,6 +126,9 @@
               <div class="preview-center" id="preview-center"></div>
               <div class="preview-orbit"></div>
               <div class="preview-body" id="preview-body"></div>
+              <div class="group-body group-body-one"></div>
+              <div class="group-body group-body-two"></div>
+              <div class="group-body group-body-three"></div>
               <div class="preview-square" id="preview-square"></div>
               <div class="preview-caption" id="preview-caption">circular path / r = 3</div>
               <div class="preview-overlay" id="preview-overlay">Transform<span>(square, circle)</span></div>
@@ -148,7 +152,10 @@
     <b>PLACE</b> dot <b>AT</b> (0, 0);</pre></article>
           <article class="primitive-card"><div class="primitive-symbol">⇢</div><div class="primitive-meta">ANIMATION / 03</div><h3>Commands</h3><p>Place, move, fade, rotate, scale, transform, wait, or circulate objects.</p><pre><b>MOVE</b> dot <b>TO</b> (3, 0)
     <b>FOR</b> 2 <b>RATE</b> LINEAR;</pre></article>
-          <article class="primitive-card"><div class="primitive-symbol">♫</div><div class="primitive-meta">AUDIO / 04</div><h3>Voice-over</h3><p>Synthesize narration with gTTS and line up indented scene actions as it plays.</p><pre><b>SPEAK</b> <em>"Let's move."</em> <b>DO:</b>
+          <article class="primitive-card"><div class="primitive-symbol">⫸</div><div class="primitive-meta">COMPOSITION / 04</div><h3>Parallel groups</h3><p>Start multiple animations together in one zero-lag animation group.</p><pre><b>ALL DO:</b>
+    <b>MOVE</b> sun <b>TO</b> (-3, 1) <b>FOR</b> 2;
+    <b>MOVE</b> moon <b>TO</b> (3, 1) <b>FOR</b> 2;</pre></article>
+          <article class="primitive-card"><div class="primitive-symbol">♫</div><div class="primitive-meta">AUDIO / 05</div><h3>Voice-over</h3><p>Synthesize narration with gTTS and line up indented scene actions as it plays.</p><pre><b>SPEAK</b> <em>"Let's move."</em> <b>DO:</b>
     <b>MOVE</b> dot <b>TO</b> (1, 0) <b>FOR</b> 2;</pre></article>
         </div>
         <a class="spec-link" href="https://github.com/Ansari-Codes/manimscript/blob/main/README.md">OPEN FULL LANGUAGE GUIDE <span>↗</span></a>

@@ -12,6 +12,10 @@ SCENE "ShapeDemo":
     FADE_IN sun FOR 0.5;
     FADE_IN box FOR 0.5;
     FADE_IN dot FOR 0.5;
+    ALL DO:
+        MOVE sun TO (-3, 1) FOR 1;
+        MOVE box TO (0, 1) FOR 1;
+        MOVE dot TO (3, -1) FOR 1;
     MOVE dot TOWARD box FOR 2;
     ROTATE box BY 45 FOR 1;
     SCALE sun BY 1.5 FOR 1;

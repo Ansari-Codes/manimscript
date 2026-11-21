@@ -24,7 +24,7 @@ class ObjectDefinition:
 class Scene:
     name: str
     transition: str | None
-    commands: list[str]
+    commands: list[object]
 
 
 @dataclass
@@ -154,6 +154,46 @@ def supported_transitions() -> set[str]:
     return {"NONE", "FADE", "CROSS_FADE", "WRITE"}
 
 
+def parse_command_block(
+    lines: list[tuple[int, int, str]],
+    index: int,
+    parent_indent: int,
+    objects: dict[str, ObjectDefinition],
+) -> tuple[list[object], int]:
+    commands: list[object] = []
+    while index < len(lines) and lines[index][1] > parent_indent:
+        line_number, indent, line = lines[index]
+        all_match = re.fullmatch(r"ALL\s+DO\s*:", line)
+        if all_match:
+            block, index = parse_command_block(lines, index + 1, indent, objects)
+            if not block:
+                raise DSLParseError(f"Line {line_number}: ALL DO block cannot be empty")
+            commands.append({"all": block})
+            continue
+
+        speak_match = re.fullmatch(
+            r'SPEAK\s+(["\'])(.*?)\1(?:\s+(ALL\s+)?DO\s*:)?', line
+        )
+        if speak_match:
+            text = speak_match.group(2)
+            if re.search(r"\s+DO\s*:$", line):
+                block, index = parse_command_block(lines, index + 1, indent, objects)
+                commands.append({
+                    "speak": text,
+                    "block": block,
+                    "parallel": bool(speak_match.group(3)),
+                })
+                continue
+            commands.append({"speak": text, "block": [], "parallel": False})
+            index += 1
+            continue
+
+        validate_command(line, line_number, objects)
+        commands.append(line)
+        index += 1
+    return commands, index
+
+
 def parse(source: str) -> Program:
     objects: dict[str, ObjectDefinition] = {}
     scenes: list[Scene] = []
@@ -200,23 +240,34 @@ def parse(source: str) -> Program:
         elif section == "scene":
             if current_scene is None:
                 raise DSLParseError(f"Line {line_number}: command outside scene")
-            speak_match = re.fullmatch(r'SPEAK\s+(["\'])(.*?)\1(?:\s+DO\s*:)?', line)
+            speak_match = re.fullmatch(
+                r'SPEAK\s+(["\'])(.*?)\1(?:\s+(ALL\s+)?DO\s*:)?', line
+            )
+            if line == "ALL DO:" or (
+                speak_match and re.search(r"\s+DO\s*:$", line)
+            ):
+                block, index = parse_command_block(lines, index + 1, indent, objects)
+                if line == "ALL DO:" and not block:
+                    raise DSLParseError(f"Line {line_number}: ALL DO block cannot be empty")
+                if line == "ALL DO:":
+                    current_scene.commands.append({"all": block})
+                else:
+                    current_scene.commands.append(
+                        {
+                            "speak": speak_match.group(2),
+                            "block": block,
+                            "parallel": bool(speak_match.group(3)),
+                        }
+                    )
+                continue
             if speak_match:
-                text = speak_match.group(2)
-                if re.search(r"\s+DO\s*:$", line):
-                    block_indent = indent
-                    block = []
-                    index += 1
-                    while index < len(lines):
-                        next_number, next_indent, next_line = lines[index]
-                        if next_indent <= block_indent:
-                            break
-                        validate_command(next_line, next_number, objects)
-                        block.append(next_line)
-                        index += 1
-                    current_scene.commands.append({"speak": text, "block": block})
-                    continue
-                current_scene.commands.append({"speak": text, "block": []})
+                current_scene.commands.append(
+                    {
+                        "speak": speak_match.group(2),
+                        "block": [],
+                        "parallel": False,
+                    }
+                )
                 index += 1
                 continue
             validate_command(line, line_number, objects)
@@ -329,28 +380,22 @@ def target_expression(text: str, objects: dict[str, ObjectDefinition]) -> str:
     raise DSLParseError(f"Unknown target or point: {text}")
 
 
-def compile_command(line: str, objects: dict[str, ObjectDefinition]) -> list[str]:
-    place_match = re.fullmatch(r"PLACE\s+([A-Za-z_]\w*)\s+AT\s+(.+)", line)
-    if place_match:
-        name, point = place_match.groups()
-        if name not in objects:
-            raise DSLParseError(f"Unknown object {name}")
-        return [f"{name}.move_to({parse_point(point)})", f"self.add({name})"]
-
+def compile_animation(line: str, objects: dict[str, ObjectDefinition]) -> str | None:
     move_match = re.fullmatch(
         r"MOVE\s+([A-Za-z_]\w*)\s+(TO|TOWARD)\s+(.+?)\s+FOR\s+(\d+(?:\.\d*)?)"
         r"(?:\s+RATE\s+(LINEAR|SMOOTH|IN_OUT|EASE_IN_OUT))?",
         line,
     )
     if move_match:
-        name, direction, target, duration, rate = move_match.groups()
+        name, _, target, duration, rate = move_match.groups()
         if name not in objects:
             raise DSLParseError(f"Unknown object {name}")
         target_text = target_expression(target.strip(), objects)
         rate_func = "linear" if rate == "LINEAR" else "smooth"
-        if rate in ("IN_OUT", "EASE_IN_OUT"):
-            rate_func = "smooth"
-        return [f"self.play({name}.animate.move_to({target_text}), run_time={duration}, rate_func={rate_func})"]
+        return (
+            f"{name}.animate(run_time={duration}, rate_func={rate_func})"
+            f".move_to({target_text})"
+        )
 
     circulate_match = re.fullmatch(
         r"CIRCULATE\s+([A-Za-z_]\w*)\s+AROUND\s+(.+?)\s+RADIUS\s+"
@@ -359,14 +404,16 @@ def compile_command(line: str, objects: dict[str, ObjectDefinition]) -> list[str
     )
     if circulate_match:
         name, target, radius, omega, duration = circulate_match.groups()
+        if name not in objects:
+            raise DSLParseError(f"Unknown object {name}")
         center = target_expression(target.strip(), objects)
-        return [
-            f"self.play(UpdateFromAlphaFunc({name},",
-            f"    lambda mob, alpha: mob.move_to({center} +",
-            f"    {radius} * np.array([np.cos({omega} * alpha * 2 * np.pi),",
-            f"    np.sin({omega} * alpha * 2 * np.pi), 0]))),",
-            f"    run_time={duration})",
-        ]
+        return (
+            f"UpdateFromAlphaFunc({name}, "
+            f"lambda mob, alpha: mob.move_to({center} + "
+            f"{radius} * np.array([np.cos({omega} * alpha * 2 * np.pi), "
+            f"np.sin({omega} * alpha * 2 * np.pi), 0])), "
+            f"run_time={duration})"
+        )
 
     fade_match = re.fullmatch(r"FADE_(IN|OUT)\s+([A-Za-z_]\w*)(?:\s+FOR\s+(\d+(?:\.\d*)?))?", line)
     if fade_match:
@@ -374,8 +421,7 @@ def compile_command(line: str, objects: dict[str, ObjectDefinition]) -> list[str
         if name not in objects:
             raise DSLParseError(f"Unknown object {name}")
         method = "FadeIn" if action == "IN" else "FadeOut"
-        duration_arg = f", run_time={duration}" if duration else ", run_time=1"
-        return [f"self.play({method}({name}{duration_arg}))"]
+        return f"{method}({name}, run_time={duration or '1'})"
 
     rotate_match = re.fullmatch(
         r"ROTATE\s+([A-Za-z_]\w*)\s+BY\s+([-+]?\d+(?:\.\d*)?)"
@@ -384,8 +430,9 @@ def compile_command(line: str, objects: dict[str, ObjectDefinition]) -> list[str
     )
     if rotate_match:
         name, angle, duration = rotate_match.groups()
-        duration = duration or "1"
-        return [f"self.play(Rotate({name}, angle={angle} * DEGREES), run_time={duration})"]
+        if name not in objects:
+            raise DSLParseError(f"Unknown object {name}")
+        return f"Rotate({name}, angle={angle} * DEGREES, run_time={duration or '1'})"
 
     scale_match = re.fullmatch(
         r"SCALE\s+([A-Za-z_]\w*)\s+BY\s+(\d+(?:\.\d*)?)"
@@ -394,15 +441,72 @@ def compile_command(line: str, objects: dict[str, ObjectDefinition]) -> list[str
     )
     if scale_match:
         name, factor, duration = scale_match.groups()
-        duration = duration or "1"
-        return [f"self.play({name}.animate.scale({factor}), run_time={duration})"]
+        if name not in objects:
+            raise DSLParseError(f"Unknown object {name}")
+        return f"{name}.animate(run_time={duration or '1'}).scale({factor})"
 
     transform_match = re.fullmatch(r"TRANSFORM\s+([A-Za-z_]\w*)\s+TO\s+([A-Za-z_]\w*)\s+FOR\s+(\d+(?:\.\d*)?)", line)
     if transform_match:
         name, target, duration = transform_match.groups()
         if name not in objects or target not in objects:
             raise DSLParseError(f"Unknown object in transformation: {line}")
-        return [f"self.play(Transform({name}, {target}), run_time={duration})"]
+        return f"Transform({name}, {target}, run_time={duration})"
+    return None
+
+
+def compile_animation_group(
+    commands: list[object],
+    objects: dict[str, ObjectDefinition],
+) -> tuple[list[str], str]:
+    animations: list[str] = []
+    setup: list[str] = []
+
+    def collect(items: list[object]) -> None:
+        for item in items:
+            if isinstance(item, dict) and "all" in item:
+                nested = item["all"]
+                if not isinstance(nested, list):
+                    raise DSLParseError("Invalid nested ALL DO block")
+                collect(nested)
+                continue
+            if not isinstance(item, str):
+                raise DSLParseError("ALL DO blocks may only contain animation commands")
+            place_match = re.fullmatch(r"PLACE\s+([A-Za-z_]\w*)\s+AT\s+(.+)", item)
+            if place_match:
+                name, point = place_match.groups()
+                if name not in objects:
+                    raise DSLParseError(f"Unknown object {name}")
+                setup.extend((f"{name}.move_to({parse_point(point)})", f"self.add({name})"))
+                continue
+            animation = compile_animation(item, objects)
+            if animation is None:
+                raise DSLParseError(
+                    f"ALL DO only supports PLACE setup and animation commands, not: {item}"
+                )
+            animations.append(animation)
+
+    collect(commands)
+    if not animations:
+        raise DSLParseError("ALL DO block must contain at least one animation")
+    return setup, f"AnimationGroup({', '.join(animations)}, lag_ratio=0)"
+
+
+def compile_parallel(commands: list[object], objects: dict[str, ObjectDefinition]) -> list[str]:
+    setup, group = compile_animation_group(commands, objects)
+    return setup + [f"self.play({group})"]
+
+
+def compile_command(line: str, objects: dict[str, ObjectDefinition]) -> list[str]:
+    animation = compile_animation(line, objects)
+    if animation is not None:
+        return [f"self.play({animation})"]
+
+    place_match = re.fullmatch(r"PLACE\s+([A-Za-z_]\w*)\s+AT\s+(.+)", line)
+    if place_match:
+        name, point = place_match.groups()
+        if name not in objects:
+            raise DSLParseError(f"Unknown object {name}")
+        return [f"{name}.move_to({parse_point(point)})", f"self.add({name})"]
 
     wait_match = re.fullmatch(r"WAIT\s+(\d+(?:\.\d*)?)", line)
     if wait_match:
@@ -449,6 +553,48 @@ def transpile(program: Program) -> str:
         "",
     ]
     voice_index = 0
+
+    def emit_commands(commands: list[object], indent: int = 8) -> None:
+        nonlocal voice_index
+        prefix = " " * indent
+        for command in commands:
+            if isinstance(command, dict) and "all" in command:
+                block = command["all"]
+                if not isinstance(block, list):
+                    raise DSLParseError("Invalid ALL DO block")
+                lines.extend(prefix + line for line in compile_parallel(block, program.objects))
+            elif isinstance(command, dict) and "speak" in command:
+                voice_index += 1
+                text = python_literal(command["speak"])
+                scene_name = scene_class_name(scene.name)
+                lines.append(
+                    prefix + f"voice_file, voice_duration = create_voiceover("
+                    f"{text}, {scene_name!r}, {voice_index})"
+                )
+                lines.append(prefix + "self.add_sound(voice_file)")
+                block = command["block"]
+                if not isinstance(block, list):
+                    raise DSLParseError("Invalid SPEAK DO block")
+                if command.get("parallel"):
+                    group_name = f"voice_animation_{voice_index}"
+                    setup, group = compile_animation_group(block, program.objects)
+                    lines.extend(prefix + line for line in setup)
+                    lines.append(
+                        prefix + f"{group_name} = {group}"
+                    )
+                    lines.append(prefix + f"self.play({group_name})")
+                    lines.append(
+                        prefix + f"self.wait(max(0, voice_duration - {group_name}.run_time))"
+                    )
+                else:
+                    emit_commands(block, indent)
+                    lines.append(prefix + "self.wait(voice_duration)")
+            elif isinstance(command, str):
+                for compiled_line in compile_command(command, program.objects):
+                    lines.append(prefix + compiled_line)
+            else:
+                raise DSLParseError(f"Unknown command: {command}")
+
     for scene in program.scenes:
         lines.append(f"class {scene_class_name(scene.name)}(Scene):")
         lines.append("    def construct(self):")
@@ -457,26 +603,7 @@ def transpile(program: Program) -> str:
         for name, definition in program.objects.items():
             lines.append(f"        {name} = {object_constructor(definition)}")
         lines.append("")
-        for command in scene.commands:
-            if isinstance(command, dict) and "speak" in command:
-                voice_index += 1
-                text = python_literal(command["speak"])
-                scene_name = scene_class_name(scene.name)
-                lines.append(
-                    f"        voice_file, voice_duration = create_voiceover("
-                    f"{text}, {scene_name!r}, {voice_index})"
-                )
-                lines.append("        self.add_sound(voice_file)")
-                for action in command["block"]:
-                    for compiled_line in compile_command(action, program.objects):
-                        lines.append("        " + compiled_line)
-                if not command["block"]:
-                    lines.append("        self.wait(voice_duration)")
-                else:
-                    lines.append("        self.wait(voice_duration)")
-            else:
-                for compiled_line in compile_command(command, program.objects):
-                    lines.append("        " + compiled_line)
+        emit_commands(scene.commands)
         if not scene.commands:
             lines.append("        pass")
         lines.append("")

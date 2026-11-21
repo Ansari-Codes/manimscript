@@ -179,6 +179,26 @@ The accepted rate names are `LINEAR`, `SMOOTH`, `IN_OUT`, and `EASE_IN_OUT`.
 `LINEAR` uses Manim's linear rate function; the remaining accepted names use
 Manim's smooth rate function.
 
+### Parallel animation groups
+
+Use `ALL DO:` to start several animations together rather than playing each
+command sequentially:
+
+```manim
+SCENE "GroupMove":
+    ALL DO:
+        MOVE planet TO (2, 1) FOR 2;
+        MOVE moon TO (-2, 0) FOR 2;
+        ROTATE title BY 90 FOR 1;
+```
+
+The block is emitted as one Manim `self.play(AnimationGroup(..., lag_ratio=0))`
+call. Each animation starts at the same time and keeps its own duration; the
+group finishes when its longest animation finishes. `ALL DO` accepts
+animation commands: `MOVE`, `CIRCULATE`, `FADE_IN`, `FADE_OUT`, `ROTATE`,
+`SCALE`, and `TRANSFORM`. Commands that act immediately or control timing,
+such as `PLACE`, `REMOVE`, and `WAIT`, must remain outside the group.
+
 ### Voice-over
 
 `SPEAK` synthesizes English speech with gTTS:
@@ -198,6 +218,21 @@ SCENE "Falling Object":
         FADE_IN apple FOR 0.5;
         MOVE apple TOWARD earth FOR 2;
 ```
+
+Use `ALL DO:` after `SPEAK` when the actions should also run at the same time
+as one another:
+
+```manim
+SCENE "NarratedOrbit":
+    SPEAK "The moon and title move together." ALL DO:
+        MOVE moon AROUND (0, 0) RADIUS 3 OMEGA 1 FOR 4;
+        MOVE title TO (0, 2) FOR 2;
+```
+
+The grouped animations begin with the voice-over. The scene waits for whichever
+lasts longer: the generated narration or the longest animation in the group.
+`SPEAK ... ALL DO:` accepts the same animation-only commands as a regular
+`ALL DO:` block.
 
 The narration audio is added to the Manim scene before the indented commands
 are emitted, so those actions play while the audio is on the timeline. The
