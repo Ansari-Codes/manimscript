@@ -1,0 +1,14 @@
+# Transition from one shape to another
+
+OBJECTS:
+    square: { object: { type: "square", side_length: 2, color: BLUE, fill_opacity: 0.7 } }
+    circle: { object: { type: "circle", radius: 1.2, color: RED, fill_opacity: 0.7 } }
+    title: { object: { type: "text", text: "Shape Transformation", font_size: 48, color: WHITE } }
+
+SCENE "Transformation":
+    PLACE title AT (0, 3);
+    PLACE square AT (0, 0);
+    FADE_IN title FOR 0.5;
+    FADE_IN square FOR 0.5;
+    TRANSFORM square TO circle FOR 2;
+    WAIT 1;

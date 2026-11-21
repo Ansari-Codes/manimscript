@@ -1,0 +1,15 @@
+# SVG logo reveal and exit
+
+OBJECTS:
+    logo: { source: "assets/logo.svg" }
+    title: { object: { type: "text", text: "ManimScript", font_size: 64, color: BLUE } }
+
+SCENE "LogoReveal":
+    PLACE logo AT (0, 0.5);
+    PLACE title AT (0, -2.5);
+    SCALE logo BY 0.35 FOR 1;
+    FADE_IN logo FOR 1;
+    FADE_IN title FOR 1;
+    WAIT 2;
+    FADE_OUT title FOR 0.5;
+    FADE_OUT logo FOR 0.5;

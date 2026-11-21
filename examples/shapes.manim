@@ -1,0 +1,19 @@
+# Shape placement, movement, rotation, scaling, and removal
+
+OBJECTS:
+    sun: { object: { type: "circle", radius: 0.8, color: YELLOW, fill_opacity: 1 } }
+    box: { object: { type: "rectangle", width: 2.4, height: 1.2, color: BLUE, fill_opacity: 0.5 } }
+    dot: { object: { type: "dot", radius: 0.25, color: RED } }
+
+SCENE "ShapeDemo":
+    PLACE sun AT (-4, 1);
+    PLACE box AT (0, 0);
+    PLACE dot AT (4, -1);
+    FADE_IN sun FOR 0.5;
+    FADE_IN box FOR 0.5;
+    FADE_IN dot FOR 0.5;
+    MOVE dot TOWARD box FOR 2;
+    ROTATE box BY 45 FOR 1;
+    SCALE sun BY 1.5 FOR 1;
+    WAIT 0.5;
+    REMOVE dot;

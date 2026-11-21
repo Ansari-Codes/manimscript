@@ -1,0 +1,109 @@
+OBJECTS:
+    title: { object: { type: "text", text: "'GRAVITY'", color: GOLD } }
+    subtitle: { object: { type: "text", text: "'The force of attraction'", color: WHITE } }
+
+    earth: { object: { type: "circle", radius: 1.2, color: BLUE, fill_color: BLUE, fill_opacity: 0.8 } }
+    earth_label: { object: { type: "text", text: "'EARTH'", color: WHITE } }
+
+    apple: { object: { type: "circle", radius: 0.25, color: RED, fill_color: RED, fill_opacity: 1 } }
+    apple_label: { object: { type: "text", text: "'Object'", color: RED } }
+
+    planet: { object: { type: "circle", radius: 0.35, color: YELLOW, fill_color: YELLOW, fill_opacity: 1 } }
+    orbit_label: { object: { type: "text", text: "'ORBIT'", color: GREEN } }
+
+    gravity_text: { object: { type: "text", text: "'Gravity attracts objects with mass'", color: WHITE } }
+    falling_text: { object: { type: "text", text: "'Objects fall toward Earth'", color: YELLOW } }
+    orbit_text: { object: { type: "text", text: "'Gravity keeps planets in orbit'", color: GREEN } }
+
+
+SCENE "Introduction":
+    PLACE title AT (0, 1);
+    PLACE subtitle AT (0, -0.5);
+
+    FADE_IN title FOR 1;
+    WAIT 0.5;
+    FADE_IN subtitle FOR 1;
+
+    SPEAK "Gravity is one of the fundamental forces of nature.";
+
+    WAIT 1;
+
+    FADE_OUT subtitle FOR 0.5;
+    FADE_OUT title FOR 0.5;
+
+
+    PLACE earth AT (0, -1);
+    PLACE earth_label AT (0, -1);
+
+    PLACE apple AT (-3, 2);
+    PLACE apple_label AT (-3, 2.7);
+
+    PLACE gravity_text AT (0, 3);
+
+    FADE_IN earth FOR 1;
+    FADE_IN earth_label FOR 0.5;
+    FADE_IN gravity_text FOR 1;
+
+    WAIT 0.5;
+
+    FADE_IN apple FOR 0.5;
+    FADE_IN apple_label FOR 0.5;
+
+    SPEAK "Objects with mass attract one another through gravity.";
+
+    MOVE apple TO (-1.5, 0.5) FOR 2 RATE SMOOTH;
+    MOVE apple_label TO (-1.5, 1.2) FOR 2 RATE SMOOTH;
+
+    SPEAK "Earth's gravitational attraction pulls objects toward its center.";
+
+    WAIT 1;
+
+    FADE_OUT apple_label FOR 0.5;
+    FADE_OUT gravity_text FOR 0.5;
+
+
+    PLACE earth AT (0, -1);
+    PLACE earth_label AT (0, -1);
+
+    PLACE apple AT (0, 3);
+    PLACE falling_text AT (0, 3.5);
+
+    FADE_IN earth FOR 1;
+    FADE_IN earth_label FOR 0.5;
+    FADE_IN falling_text FOR 1;
+    FADE_IN apple FOR 0.5;
+
+    SPEAK "Near Earth's surface, gravity causes objects to accelerate downward.";
+
+    MOVE apple TO (0, 0.5) FOR 2 RATE IN_OUT;
+
+    WAIT 1;
+
+    FADE_OUT falling_text FOR 1;
+
+
+    PLACE earth AT (0, 0);
+    PLACE earth_label AT (0, 0);
+
+    PLACE planet AT (3, 0);
+    PLACE orbit_label AT (0, 3.5);
+    PLACE orbit_text AT (0, -3.5);
+
+    FADE_IN earth FOR 1;
+    FADE_IN earth_label FOR 0.5;
+    FADE_IN orbit_label FOR 0.5;
+    FADE_IN orbit_text FOR 1;
+    FADE_IN planet FOR 0.5;
+
+    SPEAK "Gravity also keeps planets and satellites moving along curved paths.";
+
+    CIRCULATE planet AROUND (0, 0) RADIUS 3 OMEGA 1 FOR 6;
+
+    SPEAK "An orbit is a continuous motion influenced by gravity.";
+
+    WAIT 1;
+
+    FADE_OUT orbit_text FOR 1;
+    FADE_OUT orbit_label FOR 1;
+    FADE_OUT planet FOR 1;
+    FADE_OUT earth FOR 1;

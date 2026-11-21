@@ -1,0 +1,15 @@
+# Orbiting a planet around a fixed center
+
+OBJECTS:
+    planet: { object: { type: "circle", radius: 0.45, color: GOLD, fill_opacity: 1 } }
+    center: { object: { type: "dot", radius: 0.18, color: WHITE } }
+    label: { object: { type: "text", text: "Orbital Motion", font_size: 44, color: BLUE } }
+
+SCENE "Orbit":
+    PLACE center AT (0, 0);
+    PLACE label AT (0, 3);
+    PLACE planet AT (3, 0);
+    FADE_IN center FOR 0.5;
+    FADE_IN planet FOR 0.5;
+    FADE_IN label FOR 0.5;
+    CIRCULATE planet AROUND center RADIUS 3 OMEGA 1 FOR 8;
