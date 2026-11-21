@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b12">
+  <meta name="description" content="Explore ManimScript: a declarative language that turns compact scene descriptions into Python for Manim.">
+  <title>ManimScript — animation, compiled</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress"></span></div>
+  <header class="site-header">
+    <a class="wordmark" href="#top" aria-label="ManimScript home">
+      <img src="assets/logo.svg" alt="" width="31" height="31">
+      <span>manim<span class="wordmark-light">script</span></span>
+      <span class="wordmark-tag">LANGUAGE / 001</span>
+    </a>
+    <nav id="site-nav" aria-label="Main navigation">
+      <a href="#compiler">Compiler</a>
+      <a href="#playground">Playground</a>
+      <a href="#primitives">Primitives</a>
+      <a href="#examples">Examples</a>
+      <a class="nav-guide" href="https://github.com/Ansari-Codes/manimscript/blob/main/README.md">Language guide <span>↗</span></a>
+    </nav>
+    <button class="menu-button" id="menu-button" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-grid"></div>
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="status-pulse"></span> DECLARATIVE ANIMATION LANGUAGE <span class="eyebrow-version">v0.1 / PYTHON TARGET</span></p>
+        <h1>Describe it.<br><span>Compile it.</span><br>Watch it move<span class="cursor">_</span></h1>
+        <p class="hero-subtitle">A compact language for building animated scenes with Manim. Less setup code. More signal.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#playground">Open the playground <span>↓</span></a>
+          <a class="button button-quiet" href="https://github.com/Ansari-Codes/manimscript/blob/main/README.md">Read the language spec <span>↗</span></a>
+        </div>
+        <div class="hero-meta"><span>INPUT <b>.MANIM</b></span><i></i><span>OUTPUT <b>PYTHON</b></span><i></i><span>RENDERER <b>MANIM</b></span></div>
+      </div>
+      <div class="hero-terminal" aria-label="ManimScript compiling to Manim Python">
+        <div class="terminal-top"><div class="terminal-lights"><i></i><i></i><i></i></div><span>scene.manim</span><span class="terminal-status">● COMPILED</span></div>
+        <div class="terminal-body">
+          <div class="terminal-label">SOURCE <span>01 — DECLARATION</span></div>
+          <pre><code><span class="line-no">01</span> <b>OBJECTS:</b>
+<span class="line-no">02</span>     <i>dot</i>: { object: { type: <em>"circle"</em>,
+<span class="line-no">03</span>         radius: <strong>0.3</strong>, color: <u>CYAN</u> } }
+<span class="line-no">04</span>
+<span class="line-no">05</span> <b>SCENE</b> <em>"Motion"</em>:
+<span class="line-no">06</span>     <b>PLACE</b> dot <b>AT</b> (<strong>-3</strong>, <strong>0</strong>);
+<span class="line-no">07</span>     <b>MOVE</b> dot <b>TO</b> (<strong>3</strong>, <strong>0</strong>) <b>FOR</b> <strong>2</strong>;</code></pre>
+          <div class="compile-arrow"><span>↓</span><b>TRANSPILE</b><span>↓</span></div>
+          <div class="terminal-label">GENERATED PYTHON <span>02 — MANIM SCENE</span></div>
+          <pre class="python-code"><code><span class="line-no">01</span> <b>class</b> Motion(Scene):
+<span class="line-no">02</span>     <b>def</b> construct(self):
+<span class="line-no">03</span>         dot = Circle(
+<span class="line-no">04</span>             radius=<strong>0.3</strong>, color=CYAN)
+<span class="line-no">05</span>         dot.move_to((<strong>-3</strong>, <strong>0</strong>, <strong>0</strong>))
+<span class="line-no">06</span>         self.add(dot)
+<span class="line-no">07</span>         self.play(dot.animate
+<span class="line-no">08</span>             .move_to((<strong>3</strong>, <strong>0</strong>, <strong>0</strong>)),
+<span class="line-no">09</span>             run_time=<strong>2</strong>)</code></pre>
+        </div>
+        <div class="terminal-bottom"><span><i class="tiny-status"></i> transpilation complete</span><span>scene.py <b>↗</b></span></div>
+        <div class="terminal-orbit orbit-a"></div><div class="terminal-orbit orbit-b"></div>
+        <div class="terminal-node"></div>
+      </div>
+      <div class="hero-index"><span>01</span><span>—</span><span>04</span><div></div><span>SCROLL TO INSPECT</span></div>
+    </section>
+
+    <section class="compiler-section" id="compiler">
+      <div class="content-width">
+        <div class="section-top"><span class="section-index">01 / PIPELINE</span><span>FROM DESCRIPTION TO FRAME</span></div>
+        <div class="compiler-intro">
+          <h2>One source.<br><span>Three stages.</span></h2>
+          <p>ManimScript keeps the scene description separate from the rendering engine. Write the intent, transpile to Python, then let Manim render the result.</p>
+        </div>
+        <div class="compiler-track" aria-label="The ManimScript compile pipeline">
+          <article class="track-step" data-track-step="0">
+            <div class="track-head"><span class="track-num">STAGE 01</span><span class="track-icon">{ }</span></div>
+            <h3>Describe</h3><p>Declare objects and ordered actions in a readable <code>.manim</code> source file.</p>
+            <div class="track-file"><span>↳</span> scene.manim</div>
+          </article>
+          <div class="track-connector"><span></span><b>PARSE</b><span></span></div>
+          <article class="track-step" data-track-step="1">
+            <div class="track-head"><span class="track-num">STAGE 02</span><span class="track-icon">ƒ</span></div>
+            <h3>Transpile</h3><p><code>source.py</code> translates the declarations into Python Manim scene classes.</p>
+            <div class="track-file"><span>↳</span> generated.py</div>
+          </article>
+          <div class="track-connector"><span></span><b>RENDER</b><span></span></div>
+          <article class="track-step" data-track-step="2">
+            <div class="track-head"><span class="track-num">STAGE 03</span><span class="track-icon">▣</span></div>
+            <h3>Render</h3><p>Run the generated scene with Manim and turn the timeline into frames.</p>
+            <div class="track-file"><span>↳</span> video.mp4</div>
+          </article>
+        </div>
+        <div class="compile-command"><span class="prompt">$</span> python source.py scene.manim --output scene.py <span class="command-comment"># then render with manim</span></div>
+      </div>
+    </section>
+
+    <section class="playground-section" id="playground">
+      <div class="content-width">
+        <div class="section-top"><span class="section-index">02 / INTERACTIVE</span><span>SELECT A SOURCE FILE</span></div>
+        <div class="playground-intro"><h2>Run a tiny<br><span>thought experiment.</span></h2><p>Switch source examples, inspect their syntax, then run a small illustrative preview. The real output is rendered by Manim.</p></div>
+        <div class="playground-window">
+          <div class="editor-pane">
+            <div class="window-title"><div class="traffic"><i></i><i></i><i></i></div><span id="demo-filename">orbit.manim</span><span class="lang-badge">MANIMSCRIPT</span></div>
+            <div class="demo-tabs" role="tablist" aria-label="Select a ManimScript sample">
+              <button class="demo-tab selected" type="button" role="tab" aria-selected="true" data-demo="orbit">orbit</button>
+              <button class="demo-tab" type="button" role="tab" aria-selected="false" data-demo="transform">transform</button>
+              <button class="demo-tab" type="button" role="tab" aria-selected="false" data-demo="voice">voiceover</button>
+            </div>
+            <pre class="source-code"><code id="demo-code"></code></pre>
+            <div class="editor-footer"><span><i class="tiny-status"></i> SOURCE READY</span><button id="copy-code" type="button">COPY SOURCE <b>⧉</b></button></div>
+          </div>
+          <div class="preview-pane">
+            <div class="window-title preview-title"><span>PREVIEW / <b id="preview-name">ORBIT</b></span><span class="preview-indicator"><i></i> SIMULATED</span></div>
+            <div class="preview-stage" id="preview-stage" data-demo="orbit">
+              <div class="stage-grid"></div>
+              <div class="stage-coordinate coordinate-x">x / SCENE UNITS</div>
+              <div class="stage-coordinate coordinate-y">y</div>
+              <div class="preview-center" id="preview-center"></div>
+              <div class="preview-orbit"></div>
+              <div class="preview-body" id="preview-body"></div>
+              <div class="preview-square" id="preview-square"></div>
+              <div class="preview-caption" id="preview-caption">circular path / r = 3</div>
+              <div class="preview-overlay" id="preview-overlay">Transform<span>(square, circle)</span></div>
+            </div>
+            <div class="preview-controls"><button id="run-preview" type="button"><span>▶</span> RUN PREVIEW</button><span id="run-status">READY · 0 ERRORS</span></div>
+          </div>
+        </div>
+        <p class="preview-note"><span>i</span> The in-browser preview is illustrative. For an actual render, transpile the source and run it with Manim.</p>
+      </div>
+    </section>
+
+    <section class="primitives-section" id="primitives">
+      <div class="content-width">
+        <div class="section-top"><span class="section-index">03 / LANGUAGE SURFACE</span><span>SMALL SET OF SCENE PRIMITIVES</span></div>
+        <div class="primitives-intro"><h2>Describe the<br><span>important parts.</span></h2><p>Objects establish what exists. Commands establish what changes. Scenes provide the sequence.</p></div>
+        <div class="primitive-grid">
+          <article class="primitive-card"><div class="primitive-symbol">◈</div><div class="primitive-meta">DECLARATION / 01</div><h3>Objects</h3><p>Named Manim mobjects, created from built-in primitives or external SVG/image assets.</p><pre><b>OBJECTS:</b>
+    dot: { object: { type:
+        "circle", radius: 0.3 } }</pre></article>
+          <article class="primitive-card"><div class="primitive-symbol">▤</div><div class="primitive-meta">CONTAINER / 02</div><h3>Scenes</h3><p>A named scene compiles to a Python <code>Scene</code> class with a <code>construct</code> method.</p><pre><b>SCENE</b> <em>"Motion"</em>:
+    <b>PLACE</b> dot <b>AT</b> (0, 0);</pre></article>
+          <article class="primitive-card"><div class="primitive-symbol">⇢</div><div class="primitive-meta">ANIMATION / 03</div><h3>Commands</h3><p>Place, move, fade, rotate, scale, transform, wait, or circulate objects.</p><pre><b>MOVE</b> dot <b>TO</b> (3, 0)
+    <b>FOR</b> 2 <b>RATE</b> LINEAR;</pre></article>
+          <article class="primitive-card"><div class="primitive-symbol">♫</div><div class="primitive-meta">AUDIO / 04</div><h3>Voice-over</h3><p>Synthesize narration with gTTS and line up indented scene actions as it plays.</p><pre><b>SPEAK</b> <em>"Let's move."</em> <b>DO:</b>
+    <b>MOVE</b> dot <b>TO</b> (1, 0) <b>FOR</b> 2;</pre></article>
+        </div>
+        <a class="spec-link" href="https://github.com/Ansari-Codes/manimscript/blob/main/README.md">OPEN FULL LANGUAGE GUIDE <span>↗</span></a>
+      </div>
+    </section>
+
+    <section class="examples-section">
+      <div class="content-width">
+        <div class="section-top"><span class="section-index">04 / SOURCE LIBRARY</span><span>REAL .MANIM FILES</span></div>
+        <div class="examples-intro"><h2>Start from<br><span>a working scene.</span></h2><p>These are project source files, not screenshots. Open one, change it, compile it.</p></div>
+        <div class="example-list">
+          <a href="https://github.com/Ansari-Codes/manimscript/blob/main/examples/orbit.manim"><span class="example-file">01</span><span class="filetype">.MANIM</span><strong>orbit</strong><span class="example-description">Circular motion around an object</span><span class="example-open">OPEN FILE ↗</span></a>
+          <a href="https://github.com/Ansari-Codes/manimscript/blob/main/examples/shapes.manim"><span class="example-file">02</span><span class="filetype">.MANIM</span><strong>shapes</strong><span class="example-description">Placement, animation, and transforms</span><span class="example-open">OPEN FILE ↗</span></a>
+          <a href="https://github.com/Ansari-Codes/manimscript/blob/main/examples/transformation.manim"><span class="example-file">03</span><span class="filetype">.MANIM</span><strong>transformation</strong><span class="example-description">Morph one shape into another</span><span class="example-open">OPEN FILE ↗</span></a>
+          <a href="https://github.com/Ansari-Codes/manimscript/blob/main/examples/gravity.manim"><span class="example-file">04</span><span class="filetype">.MANIM</span><strong>gravity</strong><span class="example-description">A complete narrated, multi-part scene</span><span class="example-open">OPEN FILE ↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="cta-grid"></div>
+      <div class="cta-content"><p class="section-index">NEXT STEP / YOUR TERMINAL</p><h2>Ship the idea.<br><span>Render the scene.</span></h2><p>Clone the project, install the dependencies, and start with an example source file.</p><div class="install-command"><span>$</span> python source.py examples/orbit.manim -o orbit.py <button id="copy-command" type="button" aria-label="Copy command">⧉</button></div><a href="https://github.com/Ansari-Codes/manimscript/blob/main/README.md" class="button button-primary">Read setup & syntax <span>↗</span></a></div>
+      <div class="cta-decoration" aria-hidden="true"><span>0</span><i></i><b>1</b><em>→</em></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><a class="footer-brand" href="#top"><img src="assets/logo.svg" alt="" width="26" height="26"><span>MANIMSCRIPT</span></a><span>DECLARATIVE SCENES / MANIM PYTHON</span><a href="https://github.com/Ansari-Codes/manimscript/blob/main/LICENSE">APACHE-2.0</a><a href="#top" class="back-top">BACK TO TOP ↑</a></footer>
+</body>
+</html>

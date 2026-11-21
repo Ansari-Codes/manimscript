@@ -5,6 +5,10 @@ Write objects and a sequence of animation commands in a `.manim` file, then
 use `source.py` to transpile that file into ordinary Python code for
 [Manim Community Edition](https://www.manim.community/).
 
+For a visual introduction to the language, open [`docs/index.html`](docs/index.html)
+in a browser. It includes an interactive preview and a technical walkthrough
+of the compiler pipeline.
+
 ```text
 ManimScript source (.manim) -> source.py -> generated Python -> Manim render
 ```
